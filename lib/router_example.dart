@@ -105,17 +105,45 @@ class MyRouteDelegate extends RouterDelegate<String>
 
   @override
   Widget build(BuildContext context) {
-    print('Stack is ${describeIdentity(this)}: $_stack');
+    print('${describeIdentity(this)}.stack: $_stack');
     return Navigator(
       key: navigatorKey,
       onPopPage: _onPopPage,
       pages: [
         for (final name in _stack)
-          MyPage(
-            key: ValueKey(name),
-            name: name,
-            routeFactory: onGenerateRoute,
-          ),
+          if (name == 'Route3')
+            MyPage(
+              key: ValueKey(name),
+              name: name,
+              routeFactory: (RouteSettings settings) {
+                return PageRouteBuilder(
+                  settings: settings,
+                  opaque: false,
+                  barrierColor: Colors.black54,
+                  pageBuilder: (context, _, __) => Center(
+                    child: AlertDialog(
+                      content: Text('Is this being displayed?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: Text('NO'),
+                        ),
+                        TextButton(
+                          onPressed: () => push('RouteMagic'),
+                          child: Text('YES'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            )
+          else
+            MyPage(
+              key: ValueKey(name),
+              name: name,
+              routeFactory: onGenerateRoute,
+            ),
       ],
     );
   }
@@ -158,8 +186,14 @@ class _MyHomePageState extends State<MyHomePage> {
         return AlertDialog(
           content: Text('Is this being displayed?'),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text('NO')),
-            TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text('YES')),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('NO'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('YES'),
+            ),
           ],
         );
       },
