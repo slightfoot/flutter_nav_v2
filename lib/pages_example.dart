@@ -11,6 +11,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  static int _counter = 15;
+
   // Initial Route: /category/5/item/15
   final pages = [
     MyPage(
@@ -30,23 +32,43 @@ class _MyAppState extends State<MyApp> {
     ),
   ];
 
+  void addPage(MyPage page) {
+    setState(() => pages.add(page));
+  }
+
   bool _onPopPage(Route<dynamic> route, dynamic result) {
-    setState(() {
-      pages.remove(route.settings);
-    });
+    setState(() => pages.remove(route.settings));
     return route.didPop(result);
   }
 
   @override
   Widget build(BuildContext context) {
+    print('build: $pages');
     return MaterialApp(
       theme: ThemeData.dark(),
-      home: WillPopScope(
-        onWillPop: () async => !await _navigatorKey.currentState.maybePop(),
-        child: Navigator(
-          key: _navigatorKey,
-          onPopPage: _onPopPage,
-          pages: pages,
+      home: Scaffold(
+        body: WillPopScope(
+          onWillPop: () async => !await _navigatorKey.currentState.maybePop(),
+          child: Navigator(
+            key: _navigatorKey,
+            onPopPage: _onPopPage,
+            pages: List.of(pages),
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              final int id = ++_counter;
+              pages.add(
+                MyPage(
+                  key: Key('/item/$id'),
+                  name: '/item/$id',
+                  builder: (context) => ItemScreen(id: id),
+                ),
+              );
+            });
+          },
+          child: Icon(Icons.add),
         ),
       ),
     );
@@ -55,7 +77,7 @@ class _MyAppState extends State<MyApp> {
 
 class MyPage<T> extends Page<T> {
   const MyPage({
-    LocalKey key,
+    @required LocalKey key,
     @required String name,
     @required this.builder,
   }) : super(key: key, name: name);
@@ -69,6 +91,9 @@ class MyPage<T> extends Page<T> {
       builder: builder,
     );
   }
+
+  @override
+  String toString() => '$name';
 }
 
 class HomeScreen extends StatelessWidget {
@@ -116,8 +141,9 @@ class ItemScreen extends StatelessWidget {
       color: Colors.blue,
       child: Center(
         child: Text(
-          'Item $id',
-          style: Theme.of(context).textTheme.headline2,
+          'Item $id\n${ModalRoute.of(context).settings}',
+          style: Theme.of(context).textTheme.headline4,
+          textAlign: TextAlign.center,
         ),
       ),
     );
